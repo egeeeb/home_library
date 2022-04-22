@@ -1,5 +1,5 @@
 import csv
-from db.book import Book
+from db.book.book import Book
 
 
 class BookImport:

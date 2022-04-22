@@ -1,7 +1,12 @@
-from db.book_import import BookImport
-from db.books_repository import BooksRepository
+from db.book.book_import import BookImport
+from db.book.books_repository import BooksRepository
 from db.db_util import DBUtils
+from db.rating.rating import Rating
+from db.rating.rating_repository import RatingRepository
+from db.statistics.statistics import StatisticsRepository
+from goodreads_scrape.rating import GoodReadsRating
 from visuals.bar_chart import BarChart
+from visuals.histogram import Histogram
 from visuals.pie_chart import PieChart
 
 db_util = None
@@ -60,6 +65,35 @@ def list():
     conn.close()
 
 
+def update_goodreads_ratings():
+    conn = get_db_util().create_connection()
+
+    books_repository = BooksRepository(conn)
+    rating_repository = RatingRepository(conn)
+    books = books_repository.list()
+    for book in books:
+        good_reads_rating = GoodReadsRating(book.title, book.author).rating()
+        if good_reads_rating is not None:
+            rating = Rating(book_id=book.id, good_reads=good_reads_rating, update_time=None)
+            rating_repository.upsert(rating)
+
+        print(f'{book} good_reads rating: {good_reads_rating}')
+    conn.close()
+    return
+
+
+def draw_read_histogram():
+    conn = get_db_util().create_connection()
+    ratings = StatisticsRepository(conn).read_good_reads_ratings()
+    Histogram(ratings).show()
+    conn.close()
+
+def draw_to_read_histogram():
+    conn = get_db_util().create_connection()
+    ratings = StatisticsRepository(conn).to_read_good_reads_ratings()
+    Histogram(ratings).show()
+    conn.close()
+
 def print_options():
     print("-setup-db host port user password db_name")
     print("-import <filepath>")
@@ -67,6 +101,9 @@ def print_options():
     print("-exit")
     print("-draw-status-chart")
     print("-draw-publisher-chart <top>")
+    print("-update-goodreads-ratings")
+    print("-draw-read-histogram")
+    print("-draw-to-read-histogram")
 
 
 def execute(command, arguments):
@@ -81,6 +118,12 @@ def execute(command, arguments):
     elif command == '-setup-db':
         global db_util
         db_util = create_db_util(arguments)
+    elif command == '-update-goodreads-ratings':
+        update_goodreads_ratings()
+    elif command == '-draw-read-histogram':
+        draw_read_histogram()
+    elif command == '-draw-to-read-histogram':
+        draw_to_read_histogram()
     elif command == '-exit':
         return -1
 
