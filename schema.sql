@@ -58,3 +58,17 @@ COLLATE = utf8mb4_0900_ai_ci;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+
+CREATE TABLE `home_library`.`goodreads_genres` (
+  `name` VARCHAR(300) NOT NULL,
+  `book_id` INT NOT NULL,
+  `update_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `genre_book_id_fk_idx` (`book_id` ASC) VISIBLE,
+  INDEX `genre_name_idx` (`name` ASC) VISIBLE,
+  UNIQUE INDEX `genre_book_id_name_uq_idx` (`name` ASC, `book_id` ASC) VISIBLE,
+  CONSTRAINT `genre_book_id_fk_idx`
+    FOREIGN KEY (`book_id`)
+    REFERENCES `home_library`.`books` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);

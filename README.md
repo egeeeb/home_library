@@ -1,7 +1,7 @@
 # Home Library App
 
 - This pet project is designed to hold records of home libraries
-- It also scrapes [goodreads.com](https://www.goodreads.com) to get ratings
+- It also scrapes [goodreads.com](https://www.goodreads.com) to get ratings and genres
 - Finally it can produce following visualizations (see [Example Visualisations](#example-visualisations))
  
 
@@ -13,8 +13,10 @@
 * -draw-status-chart
 * -draw-publisher-chart top
 * -update-goodreads-ratings
+* -update-goodreads-genres
 * -draw-read-histogram
 * -draw-to-read-histogram
+* -genre-distribution-word-cloud status
 
 
 ### Setup
@@ -32,3 +34,9 @@
 - <img width="512" src="imgs\read_histogram.png" alt="read histogram"/>
 - Rating histogram of to-read books:
 - <img width="512" src="imgs\to_read_histogram.png" alt="to-read histogram"/>
+- Genre distribution word cloud:
+- <img width="512" src="imgs\genre_wc.png" alt="genre word cloud"/>
+- Read genre distribution word cloud:
+- <img width="512" src="imgs\read_genre_wc.png" alt="read genre word cloud"/>
+- To-Read genre distribution word cloud:
+- <img width="512" src="imgs\toread_genre_wc.png" alt="to read genre word cloud"/>

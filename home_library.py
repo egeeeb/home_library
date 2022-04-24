@@ -1,13 +1,17 @@
 from db.book.book_import import BookImport
 from db.book.books_repository import BooksRepository
 from db.db_util import DBUtils
+from db.goodreads_genre.goodreads_genre import GoodreadsGenre
+from db.goodreads_genre.goodreads_genre_repository import GoodreadsGenreRepository
 from db.rating.rating import Rating
 from db.rating.rating_repository import RatingRepository
 from db.statistics.statistics import StatisticsRepository
+from goodreads_scrape.genre import GoodReadsGenreScraper
 from goodreads_scrape.rating import GoodReadsRating
 from visuals.bar_chart import BarChart
 from visuals.histogram import Histogram
 from visuals.pie_chart import PieChart
+from visuals.word_cloud import Wordcloud
 
 db_util = None
 
@@ -82,17 +86,49 @@ def update_goodreads_ratings():
     return
 
 
+def update_goodreads_genres():
+    conn = get_db_util().create_connection()
+
+    books_repository = BooksRepository(conn)
+    goodreads_genre_repository = GoodreadsGenreRepository(conn)
+    books = books_repository.list()
+    for book in books:
+        good_reads_genre_names = GoodReadsGenreScraper(book.title, book.author).genres()
+        book_id = book.id
+        good_reads_genres = []
+        for good_reads_genre_name in good_reads_genre_names:
+            good_reads_genres.append(GoodreadsGenre(good_reads_genre_name, book_id))
+
+        goodreads_genre_repository.insert_all(good_reads_genres)
+        print(f'{book} good_reads genre: {good_reads_genre_names}')
+    conn.close()
+    return
+
+
 def draw_read_histogram():
     conn = get_db_util().create_connection()
     ratings = StatisticsRepository(conn).read_good_reads_ratings()
     Histogram(ratings).show()
     conn.close()
 
+
 def draw_to_read_histogram():
     conn = get_db_util().create_connection()
     ratings = StatisticsRepository(conn).to_read_good_reads_ratings()
     Histogram(ratings).show()
     conn.close()
+
+
+def draw_genre_word_cloud(arguments):
+    genres = None
+    conn = get_db_util().create_connection()
+    if len(arguments) < 1:
+        genres = StatisticsRepository(conn).genre_count()
+    else:
+        genres = StatisticsRepository(conn).genre_count_by_status(arguments[0])
+    Wordcloud(genres).show()
+    conn.close()
+
 
 def print_options():
     print("-setup-db host port user password db_name")
@@ -102,8 +138,10 @@ def print_options():
     print("-draw-status-chart")
     print("-draw-publisher-chart <top>")
     print("-update-goodreads-ratings")
+    print("-update-goodreads-genres")
     print("-draw-read-histogram")
     print("-draw-to-read-histogram")
+    print("-genre-distribution-word-cloud <status>")
 
 
 def execute(command, arguments):
@@ -124,6 +162,10 @@ def execute(command, arguments):
         draw_read_histogram()
     elif command == '-draw-to-read-histogram':
         draw_to_read_histogram()
+    elif command == '-update-goodreads-genres':
+        update_goodreads_genres()
+    elif command == '-genre-distribution-word-cloud':
+        draw_genre_word_cloud(arguments)
     elif command == '-exit':
         return -1
 
