@@ -3,15 +3,19 @@ from db.book.books_repository import BooksRepository
 from db.db_util import DBUtils
 from db.goodreads_genre.goodreads_genre import GoodreadsGenre
 from db.goodreads_genre.goodreads_genre_repository import GoodreadsGenreRepository
+from db.goodreads_quote.goodreads_quote import GoodreadsQuote
+from db.goodreads_quote.goodreads_quote_repository import GoodreadsQuoteRepository
 from db.rating.rating import Rating
 from db.rating.rating_repository import RatingRepository
 from db.statistics.statistics import StatisticsRepository
 from goodreads_scrape.genre import GoodReadsGenreScraper
+from goodreads_scrape.quote import GoodReadsQuoteScraper
 from goodreads_scrape.rating import GoodReadsRating
 from visuals.bar_chart import BarChart
 from visuals.histogram import Histogram
 from visuals.pie_chart import PieChart
 from visuals.word_cloud import Wordcloud
+from datetime import datetime
 
 db_util = None
 
@@ -129,6 +133,21 @@ def draw_genre_word_cloud(arguments):
     Wordcloud(genres).show()
     conn.close()
 
+def upgrade_goodreads_quotes():
+    print("Working on quotes...")
+    conn = get_db_util().create_connection()
+
+    current_time = datetime.now()
+    books_repository = BooksRepository(conn)
+    books = books_repository.list()
+    quote_repository = GoodreadsQuoteRepository(conn)
+    for book in books:
+        number_of_good_reads_quotes = GoodReadsQuoteScraper(book.title).number_of_quotes()
+        goodreads_quote = GoodreadsQuote(book.id, current_time, number_of_good_reads_quotes)
+        quote_repository.upsert(goodreads_quote)
+    conn.close()
+    return
+
 
 def print_options():
     print("-setup-db host port user password db_name")
@@ -142,7 +161,7 @@ def print_options():
     print("-draw-read-histogram")
     print("-draw-to-read-histogram")
     print("-genre-distribution-word-cloud <status>")
-
+    print("-fetch-number-of-quotes")
 
 def execute(command, arguments):
     if command == '-import':
@@ -168,7 +187,8 @@ def execute(command, arguments):
         draw_genre_word_cloud(arguments)
     elif command == '-exit':
         return -1
-
+    elif command == '-fetch-number-of-quotes':
+        upgrade_goodreads_quotes()
     return 1
 
 
