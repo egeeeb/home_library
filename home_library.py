@@ -11,6 +11,7 @@ from db.statistics.statistics import StatisticsRepository
 from goodreads_scrape.genre import GoodReadsGenreScraper
 from goodreads_scrape.quote import GoodReadsQuoteScraper
 from goodreads_scrape.rating import GoodReadsRating
+from twitter.api import TwitterAPI
 from visuals.bar_chart import BarChart
 from visuals.histogram import Histogram
 from visuals.pie_chart import PieChart
@@ -133,6 +134,7 @@ def draw_genre_word_cloud(arguments):
     Wordcloud(genres).show()
     conn.close()
 
+
 def upgrade_goodreads_quotes():
     print("Working on quotes...")
     conn = get_db_util().create_connection()
@@ -149,6 +151,19 @@ def upgrade_goodreads_quotes():
     return
 
 
+def get_twitter_count(arguments):
+    book_id = int(arguments[0])
+    twitter_bearer_token = arguments[1]
+
+    conn = get_db_util().create_connection()
+    books_repository = BooksRepository(conn)
+    book = books_repository.get(book_id)
+    twitter_api = TwitterAPI(bearer_token=twitter_bearer_token)
+    count_of_tweets = twitter_api.tweet_count(book.title)
+
+    print(f'Tweet count of book: {book.title} is {count_of_tweets}')
+
+
 def print_options():
     print("-setup-db host port user password db_name")
     print("-import <filepath>")
@@ -162,6 +177,8 @@ def print_options():
     print("-draw-to-read-histogram")
     print("-genre-distribution-word-cloud <status>")
     print("-fetch-number-of-quotes")
+    print("-get-twitter-count <book_id> <twitter_bearer_token>")
+
 
 def execute(command, arguments):
     if command == '-import':
@@ -189,6 +206,8 @@ def execute(command, arguments):
         return -1
     elif command == '-fetch-number-of-quotes':
         upgrade_goodreads_quotes()
+    elif command == '-get-twitter-count':
+        get_twitter_count(arguments)
     return 1
 
 

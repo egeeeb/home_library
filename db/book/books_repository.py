@@ -5,6 +5,16 @@ class BooksRepository:
     def __init__(self, connection):
         self.connection = connection
 
+    FIND_BY_ID_SQL = "SELECT id, title, author,publisher, status, owner FROM home_library.books WHERE id = %s;"
+
+    def get(self, book_id):
+        cursor = self.connection.cursor()
+        cursor.execute(self.FIND_BY_ID_SQL, (book_id,))
+        for (id, title, author, publisher, status, owner) in cursor:
+            return Book(id, title, author, publisher, status, owner)
+
+        return None
+
     LIST_SQL = "SELECT * FROM home_library.books"
 
     def list(self):
