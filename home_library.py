@@ -8,15 +8,18 @@ from db.goodreads_quote.goodreads_quote_repository import GoodreadsQuoteReposito
 from db.rating.rating import Rating
 from db.rating.rating_repository import RatingRepository
 from db.statistics.statistics import StatisticsRepository
+from db.twitter.tweet_count import TweetCount
 from goodreads_scrape.genre import GoodReadsGenreScraper
 from goodreads_scrape.quote import GoodReadsQuoteScraper
 from goodreads_scrape.rating import GoodReadsRating
 from twitter.api import TwitterAPI
+from db.twitter.tweet_count_repository import TweetCountRepository
 from visuals.bar_chart import BarChart
 from visuals.histogram import Histogram
 from visuals.pie_chart import PieChart
 from visuals.word_cloud import Wordcloud
 from datetime import datetime
+import time
 
 db_util = None
 
@@ -163,6 +166,21 @@ def get_twitter_count(arguments):
 
     print(f'Tweet count of book: {book.title} is {count_of_tweets}')
 
+def update_tweet_count(arguments):
+    twitter_bearer_token = arguments[0]
+    current_time = datetime.now()
+
+    conn = get_db_util().create_connection()
+    books_repository = BooksRepository(conn)
+    tweet_repository = TweetCountRepository(conn)
+    twitter_api = TwitterAPI(bearer_token=twitter_bearer_token)
+    books = books_repository.list()
+    for book in books:
+        count_of_tweets = twitter_api.tweet_count(book.title)
+        time.sleep(4.0)
+        tweet_count_of_book = TweetCount(count_of_tweets, book.id, current_time)
+        tweet_repository.upsert(tweet_count_of_book)
+
 
 def print_options():
     print("-setup-db host port user password db_name")
@@ -178,6 +196,7 @@ def print_options():
     print("-genre-distribution-word-cloud <status>")
     print("-fetch-number-of-quotes")
     print("-get-twitter-count <book_id> <twitter_bearer_token>")
+    print("-update-tweet-count <twitter_bearer_token>")
 
 
 def execute(command, arguments):
@@ -208,6 +227,8 @@ def execute(command, arguments):
         upgrade_goodreads_quotes()
     elif command == '-get-twitter-count':
         get_twitter_count(arguments)
+    elif command == '-update-tweet-count':
+        update_tweet_count(arguments)
     return 1
 
 

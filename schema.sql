@@ -84,3 +84,15 @@ CREATE TABLE `home_library`.`goodreads_quotes` (
     REFERENCES `home_library`.`books` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+
+CREATE TABLE `home_library`.`tweet_count` (
+  `book_id` INT NOT NULL,
+  `_count` INT NOT NULL DEFAULT 0,
+  `update_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`book_id`),
+  UNIQUE INDEX `book_id_UNIQUE` (`book_id` ASC) VISIBLE,
+  CONSTRAINT `book_id_FK_tc`
+    FOREIGN KEY (`book_id`)
+    REFERENCES `home_library`.`books` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);

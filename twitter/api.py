@@ -12,6 +12,7 @@ class TwitterAPI:
                      headers={"Authorization": f'Bearer {self.BEARER_TOKEN}'})
 
         if result.status_code != 200:
+            print(result.text)
             return 0
 
         twit_resp = result.json()
